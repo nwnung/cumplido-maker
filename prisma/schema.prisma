@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -6,4 +5,27 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model UserProfile {
+  id          String @id @default(dbgenerated("auth.uid()")) @db.Uuid
+  email       String? @unique // Puede ser útil tenerlo aquí, aunque esté en auth.users
+  name        String?
+  credits     Int    @default(10) // Ejemplo: créditos para usar la IA
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  requests    ComplimentRequest[]
+
+  @@map("UserProfile")
+}
+
+model ComplimentRequest {
+  id                  String @id @default(cuid())
+  userId              String @db.Uuid
+  user                UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords            String[]
+  generatedCompliment String
+  createdAt           DateTime @default(now())
+
+  @@map("ComplimentRequest")
 }

@@ -1,10 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import localFont from "next/font/local";
-
-const plain = localFont({
-  src: "/fonts/Plain-Regular.otf",
-});
 
 export const metadata: Metadata = {
   title: "Cumplido Maker",
@@ -17,8 +12,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${plain.className} antialiased`}>{children}</body>
+    <html lang="es">
+      <body className={`antialiased`}>{children}</body>
     </html>
   );
 }
