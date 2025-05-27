@@ -1,5 +1,5 @@
-import { resend } from '@/lib/resend';
-import { AuthSchemas } from '@/lib/validations/auth';
+import { resend } from "@/lib/resend";
+import { AuthSchemas } from "@/lib/validations/auth";
 
 interface EmailConfig {
   from: string;
@@ -18,7 +18,11 @@ class EmailService {
     return AuthSchemas.emailTemplate.parse({ email, url, name });
   }
 
-  async sendVerificationEmail(email: string, confirmationUrl: string, userName?: string) {
+  async sendVerificationEmail(
+    email: string,
+    confirmationUrl: string,
+    userName?: string
+  ) {
     const validated = this.validateEmailData(email, confirmationUrl, userName);
 
     try {
@@ -29,9 +33,9 @@ class EmailService {
         html: this.getVerificationTemplate(validated.url, userName),
       });
     } catch (error) {
-      console.error('Verification email error:', error);
+      console.error("Verification email error:", error);
       // CRITICAL: No exponer detalles del error al cliente
-      throw new Error('EMAIL_SEND_FAILED');
+      throw new Error("EMAIL_SEND_FAILED");
     }
   }
 
@@ -46,15 +50,31 @@ class EmailService {
         html: this.getPasswordResetTemplate(validated.url),
       });
     } catch (error) {
-      console.error('Password reset email error:', error);
-      throw new Error('EMAIL_SEND_FAILED');
+      console.error("Password reset email error:", error);
+      throw new Error("EMAIL_SEND_FAILED");
+    }
+  }
+
+  async sendWelcomeEmail(email: string, userName?: string) {
+    const validated = AuthSchemas.email.parse(email);
+
+    try {
+      await resend.emails.send({
+        from: this.config.from,
+        to: validated,
+        subject: `¡Bienvenido a ${this.config.appName}! 🎉`,
+        html: this.getWelcomeTemplate(userName),
+      });
+    } catch (error) {
+      console.error("Welcome email error:", error);
+      throw new Error("EMAIL_SEND_FAILED");
     }
   }
 
   private getVerificationTemplate(url: string, userName?: string) {
     return `
       <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>¡Hola ${userName || 'ahí'}! 👋</h2>
+        <h2>¡Hola ${userName || "ahí"}! 👋</h2>
         <p>Gracias por registrarte en ${this.config.appName}.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${url}" 
@@ -88,11 +108,33 @@ class EmailService {
       </div>
     `;
   }
+
+  private getWelcomeTemplate(userName?: string) {
+    return `
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>¡Bienvenido a ${this.config.appName}! 🎉</h2>
+        <p>¡Hola ${
+          userName || "ahí"
+        }! Gracias por unirte a nuestra comunidad.</p>
+        <p>Ahora puedes generar cumplidos personalizados y creativos para tus amigos y familiares.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${this.config.appUrl}/dashboard" 
+             style="background: #16a34a; color: white; padding: 12px 24px; 
+                    text-decoration: none; border-radius: 6px; display: inline-block;">
+            Comenzar a Generar Cumplidos
+          </a>
+        </div>
+        <p style="color: #666; font-size: 14px;">
+          ¡Esperamos que disfrutes creando cumplidos únicos y especiales!
+        </p>
+      </div>
+    `;
+  }
 }
 
 // Instancia singleton para toda la app
 export const emailService = new EmailService({
   from: `${process.env.APP_NAME} <auth@${process.env.DOMAIN}>`,
-  appName: process.env.APP_NAME || 'Tu SaaS',
-  appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  appName: process.env.APP_NAME || "Tu SaaS",
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
 });
